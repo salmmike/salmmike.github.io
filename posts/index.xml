@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts on Mike&#39;s blog about random software stuff</title>
+    <link>https://salmmike.github.io/posts/</link>
+    <description>Recent content in Posts on Mike&#39;s blog about random software stuff</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 28 May 2022 18:52:14 +0300</lastBuildDate><atom:link href="https://salmmike.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>STM32 microblink</title>
+      <link>https://salmmike.github.io/posts/post_1/</link>
+      <pubDate>Sat, 28 May 2022 18:52:14 +0300</pubDate>
+      
+      <guid>https://salmmike.github.io/posts/post_1/</guid>
+      <description>Disclaimer: The following text is written by someone who knows next to nothing about microcontrollers. The writer was also drinking beer. Please don’t use it as a source for anything other than entertainment purposes.
+If you&amp;rsquo;ve ever fiddled around with microcontroller development boards, you&amp;rsquo;ve probably noticed that blinking an LED is pretty much the hello world of the microcontroller world. By no means am I an expert in bare-metal programming, but to me, it seems that the usual procedure for creating an MCU hello world is the following:</description>
+    </item>
+    
+  </channel>
+</rss>

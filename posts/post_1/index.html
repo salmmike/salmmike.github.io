@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<title>STM32 microblink | Mike&#39;s blog about random software stuff</title>
+<meta charset="utf-8">
+<meta name="generator" content="Hugo 0.99.1" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://salmmike.github.io/css/index.css">
+<link rel="canonical" href="https://salmmike.github.io/posts/post_1/">
+<link rel="alternate" type="application/rss+xml" href="" title="Mike&#39;s blog about random software stuff">
+
+<header>
+  
+    <a href="https://salmmike.github.io/" class="title">Mike&#39;s blog about random software stuff</a>
+  
+  
+</header>
+
+<article>
+  <header>
+    <h1>STM32 microblink</h1>
+    <time datetime="2022-05-28T18:52:14&#43;03:00">May 28, 2022</time>
+  </header>
+  <p><strong>Disclaimer</strong>: The following text is written by someone who knows next to nothing about microcontrollers.
+The writer was also drinking beer.
+Please don’t use it as a source for anything other than entertainment purposes.</p>
+<p>If you&rsquo;ve ever fiddled around with microcontroller development boards,
+you&rsquo;ve probably noticed that blinking an LED is pretty much the hello world of the microcontroller world.
+By no means am I an expert in bare-metal programming, but to me, it seems that the usual procedure for creating an MCU hello world is the following:</p>
+<ol>
+<li>Get a compiler and programmer suitable for your MCU.</li>
+<li>Download some huge library or even an IDE for the MCU.</li>
+<li>Navigate to the template code, and add a couple of lines of code there.</li>
+<li>Compile and flash by some simple command.</li>
+</ol>
+<p>At this point, there hopefully is a blinking LED on your table. So now you can modify the source code just like any other program,
+e.g., change the blinking frequency or maybe blink some other LED on the board. Great, that wasn&rsquo;t too bad!</p>
+<p>But if you’re like me, you’ll quickly wonder why I needed this library of more than 100,000 lines of code just to blink an LED? Maybe I just take the source file with the main function and replace the library headers with my own code. It shouldn’t be too much work, right? I’ll just check the programmer manual for the address of the I/O port attached to the LED and write a one there. That should light up the LED. The MCU development board I was using was an STM32 Value line Discovery board. I managed to get its lights blinking using the
+<a href="https://github.com/libopencm3/libopencm3-examples/tree/master/examples/stm32/f1/stm32vl-discovery/miniblink">miniblink</a>
+example from the open-source ARM-cortex firmware library <a href="https://libopencm3.org/">libopencm3</a>.</p>
+<h1 id="removing-the-library-headers">Removing the library headers</h1>
+<p>After a bit of googling, reading the MCU manual, studying the library, and hacking with the miniblink example, I started removing everything that came from the header files. I first had to learn how to write to a specific memory address without using the library functions. Being someone who hasn’t programmed much outside of an operating system, that was something I never had to do before. After studying, I found out that the solution was using a pointer. You just cast the memory address to the pointer!</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span><span style="color:#66d9ef">volatile</span> <span style="color:#66d9ef">uint32_t</span><span style="color:#f92672">*</span> <span style="color:#66d9ef">const</span> pointer_to_memory <span style="color:#f92672">=</span> (<span style="color:#66d9ef">uint32_t</span><span style="color:#f92672">*</span>) (address_of_memory);
+</span></span></code></pre></div><p>I don’t know how much it matters on this example program, but we also want to make the pointer volatile. At least for me, this is a C keyword that I haven’t needed to use that much. It means (as far as I know) that the value in the address can change at any time, and we let the compiler know that. The funny thing here is that we can make it const too. So the value can change at any time but is also constant? The const means here that the address stays constant, but the data in the address is volatile.</p>
+<p>Now we can start reading the manuals and find the memory locations we wish to modify.
+From the <a href="https://www.st.com/resource/en/user_manual/um0919-stm32vldiscovery-stm32-value-line-discovery-stmicroelectronics.pdf">Discovery board manual</a>
+we find that a blue LED is connected to the General purpose I/O register C (GPIOC) port 8 of the MCU.</p>
+<p>First, we&rsquo;ll need to enable the clock in I/O port C. By reading the
+<a href="https://www.st.com/resource/en/reference_manual/rm0041-stm32f100xx-advanced-armbased-32bit-mcus-stmicroelectronics.pdf#%5B%7B%22num%22%3A164%2C%22gen%22%3A0%7D%2C%7B%22name%22%3A%22XYZ%22%7D%2C67%2C754%2Cnull%5D">manual</a>
+and the libopencm3 source code, we find out that this is done through the reset and clock control (RCC) APB2 peripheral clock enable register (RCC_APB2ENR).
+The <a href="https://www.st.com/resource/en/reference_manual/rm0041-stm32f100xx-advanced-armbased-32bit-mcus-stmicroelectronics.pdf#%5B%7B%22num%22%3A40%2C%22gen%22%3A0%7D%2C%7B%22name%22%3A%22XYZ%22%7D%2C67%2C754%2Cnull%5D">memory map</a>
+tells us that the RCC begins from address 0x40021000, and the APB2ENR is offset 0x18 bytes from that. The I/O port C clock is enabled by setting bit number 4 in the RCC_APB2ENR to one.</p>
+<p>To use the GPIOC port 8 as a voltage source for the LED, we also need to set some bits to the correct locations of the GPIOC configuration register.
+The configuration register we need to use is the GPIOC_CRH register. By reading the MCU manual, we find that the GPIOC register begins from address 0x40011000, and the high control register is
+offset 0x04 bytes from that.
+The I/O port 8 is configured in the register bits [0-3]. To set it to output mode, we&rsquo;ll need to write anything other than zero the bits [0-1], and to set the general purpose output push-pull mode, the bits [2-3] should be zero.</p>
+<p>From this information, we can write the following code that enables us to control the LED blinking:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdint.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#66d9ef">uint32_t</span> GPIO_C <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x40011000</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#66d9ef">uint32_t</span> GPIO_PUSH_PULL <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x00</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">volatile</span> <span style="color:#66d9ef">uint32_t</span> <span style="color:#f92672">*</span>GPIOC_CRH <span style="color:#f92672">=</span> (<span style="color:#66d9ef">uint32_t</span><span style="color:#f92672">*</span>) (GPIO_C <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x04</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">volatile</span> <span style="color:#66d9ef">uint32_t</span><span style="color:#f92672">*</span> <span style="color:#66d9ef">const</span> RCC_APB2ENR <span style="color:#f92672">=</span> (<span style="color:#66d9ef">uint32_t</span><span style="color:#f92672">*</span>) (<span style="color:#ae81ff">0x40021000</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x18</span>);
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#66d9ef">uint32_t</span> RCC_APB2ENR_IOPCEN <span style="color:#f92672">=</span> (<span style="color:#ae81ff">1</span> <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">4</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>(<span style="color:#66d9ef">void</span>)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">*</span>RCC_APB2ENR <span style="color:#f92672">=</span> RCC_APB2ENR_IOPCEN;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">*</span>GPIOC_CRH <span style="color:#f92672">=</span> GPIO_PUSH_PULL <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">2</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">*</span>GPIOC_CRH <span style="color:#f92672">|=</span> <span style="color:#ae81ff">0x02</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    ...
+</span></span></code></pre></div><p>Now we can control the GPIOC I/O port output with the &ldquo;Bit Set/Reset Register&rdquo; (GPIOC_BSRR).
+Once again, from the
+<a href="https://www.st.com/resource/en/reference_manual/rm0041-stm32f100xx-advanced-armbased-32bit-mcus-stmicroelectronics.pdf#%5B%7B%22num%22%3A179%2C%22gen%22%3A0%7D%2C%7B%22name%22%3A%22XYZ%22%7D%2C67%2C523%2Cnull%5D">MCU manual</a>,
+we find that the GPIOC_BSRR address is offset 0x10 bytes from the GPIOC beginning.
+In that register, the bit number 8 is used to set the output bit on and bit number 24 to reset it.
+Using this information, we can write the following loop to blink the LED:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>    ...
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">volatile</span> <span style="color:#66d9ef">uint32_t</span><span style="color:#f92672">*</span> <span style="color:#66d9ef">const</span> GPIOC_BSRR <span style="color:#f92672">=</span> (<span style="color:#66d9ef">uint32_t</span><span style="color:#f92672">*</span>) (GPIO_C <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x10</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">while</span> (<span style="color:#ae81ff">1</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#f92672">*</span>GPIOC_BSRR <span style="color:#f92672">=</span> (<span style="color:#ae81ff">1</span><span style="color:#f92672">&lt;&lt;</span><span style="color:#ae81ff">8</span>);
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">500000</span>; i<span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>		    __asm__(<span style="color:#e6db74">&#34;nop&#34;</span>);
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		<span style="color:#f92672">*</span>GPIOC_BSRR <span style="color:#f92672">=</span> (<span style="color:#ae81ff">1</span><span style="color:#f92672">&lt;&lt;</span><span style="color:#ae81ff">24</span>);
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">500000</span>; i<span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>		    __asm__(<span style="color:#e6db74">&#34;nop&#34;</span>);
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Now let&rsquo;s compile this code and flash it to the MCU! So I&rsquo;ll just write tbe following to my terminal:</p>
+<pre><code>arm-none-eabi-gcc main.c
+</code></pre>
+<p>Now I was expecting a nice binary file that we could flash to the MCU, but instead, we get:</p>
+<pre tabindex="0"><code>/usr/lib/gcc/arm-none-eabi/12.1.0/../../../../arm-none-eabi/bin/ld: main.o:(.rodata+0x0): multiple definition of `GPIO_C&#39;; /tmp/ccizFeBX.o:(.rodata+0x10): first defined here
+/usr/lib/gcc/arm-none-eabi/12.1.0/../../../../arm-none-eabi/bin/ld: main.o:(.rodata+0x4): multiple definition of `GPIO_PUSH_PULL&#39;; /tmp/ccizFeBX.o:(.rodata+0xc): first defined here
+/usr/lib/gcc/arm-none-eabi/12.1.0/../../../../arm-none-eabi/bin/ld: main.o:(.rodata+0x8): multiple definition of `GPIOC_CRH&#39;; /tmp/ccizFeBX.o:(.rodata+0x8): first defined here
+/usr/lib/gcc/arm-none-eabi/12.1.0/../../../../arm-none-eabi/bin/ld: main.o:(.rodata+0xc): multiple definition of `RCC_APB2ENR&#39;; /tmp/ccizFeBX.o:(.rodata+0x4): first defined here
+/usr/lib/gcc/arm-none-eabi/12.1.0/../../../../arm-none-eabi/bin/ld: main.o:(.rodata+0x10): multiple definition of `RCC_APB2ENR_IOPCEN&#39;; /tmp/ccizFeBX.o:(.rodata+0x0): first defined here
+/usr/lib/gcc/arm-none-eabi/12.1.0/../../../../arm-none-eabi/bin/ld: main.o: in function `main&#39;:
+main.c:(.text+0x0): multiple definition of `main&#39;; /tmp/ccizFeBX.o:main.c:(.text+0x0): first defined here
+/usr/lib/gcc/arm-none-eabi/12.1.0/../../../../arm-none-eabi/bin/ld: /usr/lib/gcc/arm-none-eabi/12.1.0/../../../../arm-none-eabi/lib/libc.a(lib_a-exit.o): in function `exit&#39;:
+/build/arm-none-eabi-newlib/src/build-newlib/arm-none-eabi/newlib/libc/stdlib/../../../../../newlib-4.2.0.20211231/newlib/libc/stdlib/exit.c:64: undefined reference to `_exit&#39;
+collect2: error: ld returned 1 exit status
+</code></pre><p>Why would this fail? I’ve compiled programs a thousand times like that when programming on Linux, and it has worked. Now I realized that the library and its makefiles were doing a bit more than just providing easy-to-use functions for moving bits around.</p>
+<h1 id="the-linker-script">The linker script</h1>
+<p>One important bit of creating an executable program is the linking process. When compiling something for an operating system,
+we rarely need to pay attention to the <a href="https://ftp.gnu.org/old-gnu/Manuals/ld-2.9.1/html_mono/ld.html">linker</a>.
+But for a program that should run on an MCU without any operating system, things are different.
+Besides just linking the object files together, the linker also places our code sections in the places in memory they belong to.</p>
+<p>So let&rsquo;s create a linker script:</p>
+<pre tabindex="0"><code>MEMORY
+{
+    flash(rx) : ORIGIN = 0x08000000, LENGTH = 128K
+    SRAM(rwx) : ORIGIN = 0x20000000, LENGTH = 8K
+}
+</code></pre><p>Here we’ll define where and what kind of memory our MCU has. Once again, we open the manual and navigate to <a href="https://www.st.com/resource/en/reference_manual/rm0041-stm32f100xx-advanced-armbased-32bit-mcus-stmicroelectronics.pdf#%5B%7B%22num%22%3A38%2C%22gen%22%3A0%7D%2C%7B%22name%22%3A%22XYZ%22%7D%2C67%2C755%2Cnull%5D">the section about memory.</a>
+From there, we find that our MCU has 128KB of flash memory starting from address 0x08000000 and 8KB of SRAM starting at address 0x20000000.</p>
+<p>Another thing that we are missing is the startup code of the microcontroller. Because we don’t have the luxury of an operating system handling stuff in the background, we’ll need to handle some things at the startup. This part requires a bit of work both in the linker script and a C source file.</p>
+<p>We&rsquo;ll need to define a <strong>vector table</strong> that contains functions for different interrupts and events happening in the controller.
+If we wanted a truly functioning firmware library, we probably would want to create some handler for most interrupts and events
+<a href="https://www.st.com/resource/en/reference_manual/rm0041-stm32f100xx-advanced-armbased-32bit-mcus-stmicroelectronics.pdf#%5B%7B%22num%22%3A232%2C%22gen%22%3A0%7D%2C%7B%22name%22%3A%22XYZ%22%7D%2C67%2C301%2Cnull%5D">defined</a>
+for the MCU. But because that is not our goal, we can get away with just creating the reset handler.
+Also, our linker script will need sections for our executable code and some space for our variables.
+For this, let&rsquo;s add the following to our linker script:</p>
+<pre tabindex="0"><code>/* The vectors is defined in our vector source files */
+EXTERN(vectors)
+/*  I guess this is the name of the symbol where the code should start executing. */
+ENTRY(reset_handler)
+
+_stack = ORIGIN(SRAM) + LENGTH(SRAM);
+
+SECTIONS
+{
+    /* The text section contains our executable code. */
+    .text : {
+        *(.vectors) /* First we should have the vector table */
+        *(.text)    /* Executable code goes here */
+        . = ALIGN(4);
+        *(.rodata*) /* Global constants go here */
+        . = ALIGN(4);
+    } &gt; flash AT&gt; flash
+
+    /* The data section contains variables we have initialized in our code */
+    .data : {
+        _data = .;
+        *(.data)
+        . = ALIGN(4);
+        _edata = .; /* _edata just means end of data */
+    } &gt; SRAM AT&gt; flash
+	_data_loadaddr = LOADADDR(.data);
+
+    /* And here&#39;s our uninitialized data */
+    .bss : {
+        _bss = .;
+        *(.bss)
+        *(COMMON)
+        . = ALIGN(4);
+        _ebss = .; /* _ebss just means end of bss */
+    } &gt; SRAM
+
+    . = ALIGN(4);
+    end = .;
+}
+</code></pre><p>This linker script is the part that I understand the least. I think you should read
+<a href="https://jsandler18.github.io/explanations/linker_ld.html">something else</a>
+if you want to know more about it.</p>
+<h1 id="the-startup-script">The startup script</h1>
+<p>In the linker script, we mentioned the vector table. So, for our minimal MCU code, let’s define the following header file vector.h:</p>
+<pre tabindex="0"><code>typedef void (*const handler_t)(void);
+
+typedef struct
+{
+    uint32_t *stackPointer;
+    handler_t reset;
+} vectors_t;
+
+extern uint32_t _data_loadaddr, _data, _edata, _ebss, _stack;
+extern vectors_t vectors;
+
+void reset_handler(void);
+</code></pre><p>The <em>vectors_t</em> struct represents a datatype for our vector table. In our example, we only define the stack pointer and the reset handler to our vector table.
+We also define some external variables that appear in the linker script.
+In our vector.c file, we should define the reset function and initialize our vector table.</p>
+<pre tabindex="0"><code>#include &#34;vector.h&#34;
+
+int main(void);
+
+void reset_handler(void)
+{
+	volatile uint32_t *src, *dest;
+
+    /* Copy the data to SRAM */
+	for (src = &amp;_data_loadaddr, dest = &amp;_data; dest &lt; &amp;_edata; src++, dest++) {
+		*dest = *src;
+	}
+    /* Set bss to zeros */
+	while (dest &lt; &amp;_ebss) {
+		*dest++ = 0;
+	}
+	/* Continue to the main function. */
+	(void)main();
+}
+
+__attribute__ ((section(&#34;.vectors&#34;)))
+vectors_t vectors = {
+    .stackPointer       = &amp;_stack,
+    .reset              = reset_handler,
+};
+</code></pre><p>I mostly copied the reset_handler from the libopencm3 library, removing all the bits I thought I didn&rsquo;t need.
+One new thing to me in the startup code was those __attribute__ compiler directives
+(Or are they directives? Not sure what they are exactly).
+The attribute <strong>section</strong> tells our compiler that this variable must be placed in this section.</p>
+<p>The startup code is a bit fuzzy to me. I assume the point is to
+initialize the data section with their initial values, set the data in bss to zero, and then call main.
+But the thing I don&rsquo;t fully understand is how the reset/startup code knows to load the data from flash.
+Perhaps it has something to do with the <strong>&quot;&gt; SRAM AT&gt; flash&quot;</strong> line in our linker script.
+Maybe I&rsquo;ll find out one day.</p>
+<h1 id="creating-the-binary">Creating the binary</h1>
+<p>Now we have all the source files that we need to blink a light.
+The last thing we need is a Makefile for easy compilation and flashing.
+My Makefile looks like this:</p>
+<pre tabindex="0"><code>CC=arm-none-eabi-gcc
+OBJCOPY= arm-none-eabi-objcopy
+CFLAGS= -c -mthumb -mcpu=cortex-m3 -o0
+LDFLAGS= -nostdlib -T linker.ld
+
+all:main.o vector.o final.elf final.bin
+
+main.o:main.c
+	$(CC) $(CFLAGS) -o $@ $^
+
+vector.o:vector.c
+	$(CC) $(CFLAGS) -o $@ $^
+
+final.elf:main.o startup.o vector.o
+	$(CC) $(LDFLAGS) -o $@ $^
+
+final.bin:final.elf
+	$(OBJCOPY) -O binary $^ $@
+
+clean:
+	rm *.o *.elf *.bin
+
+flash:
+	st-flash write final.bin 0x08000000
+</code></pre><p>One thing to note is the -nostdlib flag we are using.
+Because of our limited linker script, we can&rsquo;t use the C standard library in this project.
+If creating the flashable binary isn&rsquo;t clear to you, I hope you can figure it out by studying that Makefile.</p>
+<p>Now, by running make and make flash I can finally blink the LED on my STM32 board with code that I can actually read through!
+Of course, you’d probably want to use that 100,000 line library for any real work, but I think having a very minimal
+example program is excellent for learning.</p>
+<p>Link to the full source code:<br>
+<a href="https://github.com/MikeSalmela/microblink/tree/master">https://github.com/MikeSalmela/microblink/tree/master</a></p>
+
+</article>
+
+
+
+</html>
