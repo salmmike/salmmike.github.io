@@ -6,7 +6,17 @@
     <description>Recent content on Mike&#39;s blog about random software stuff</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 28 May 2022 18:52:14 +0300</lastBuildDate><atom:link href="https://salmmike.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Fri, 10 Jun 2022 23:30:36 +0300</lastBuildDate><atom:link href="https://salmmike.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Advantech USB-4761 relays, C&#43;&#43; and Python</title>
+      <link>https://salmmike.github.io/posts/post2/</link>
+      <pubDate>Fri, 10 Jun 2022 23:30:36 +0300</pubDate>
+      
+      <guid>https://salmmike.github.io/posts/post2/</guid>
+      <description>Recently I was trying to control the relays of an Advantech USB-4761 DAQ-module from a Linux box in a Python project. I decided to write a little post about it because I couldn’t find any good documentation or a StackOverflow answer that would suit my needs. Maybe someone will face a similar problem someday and end up here.
+The DAQNavi library I downloaded the Linux DAQNavi driver install script from Advantech&amp;rsquo;s website and ran it.</description>
+    </item>
+    
     <item>
       <title>STM32 microblink</title>
       <link>https://salmmike.github.io/posts/post_1/</link>
