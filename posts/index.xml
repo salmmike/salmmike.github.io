@@ -6,7 +6,16 @@
     <description>Recent content in Posts on Mike&#39;s blog about random software stuff</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Fri, 10 Jun 2022 23:30:36 +0300</lastBuildDate><atom:link href="https://salmmike.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Wed, 15 Feb 2023 23:00:36 +0300</lastBuildDate><atom:link href="https://salmmike.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Learning the ropes: Rust and Emulators</title>
+      <link>https://salmmike.github.io/posts/post3/</link>
+      <pubDate>Wed, 15 Feb 2023 23:00:36 +0300</pubDate>
+      
+      <guid>https://salmmike.github.io/posts/post3/</guid>
+      <description>As a software developer, it&amp;rsquo;s always fun to learn some new things. For this reason, I decided to start learing the Rust programming language, which seems to be the new cool kid in town. For quite a long time, I disrecarded Rust as yet another &amp;ldquo;C killer&amp;rdquo;, a type of language that claims to be the next big thing, but doesn&amp;rsquo;t really ever get used in anything real. Now that Rust is even getting into the Linux kernel , I guess it&amp;rsquo;s something I should look into.</description>
+    </item>
+    
     <item>
       <title>Advantech USB-4761 relays, C&#43;&#43; and Python</title>
       <link>https://salmmike.github.io/posts/post2/</link>

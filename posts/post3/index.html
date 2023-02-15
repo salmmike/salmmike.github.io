@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<title>Learning the ropes: Rust and Emulators | Mike&#39;s blog about random software stuff</title>
+<meta charset="utf-8">
+<meta name="generator" content="Hugo 0.110.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://salmmike.github.io/css/index.css">
+<link rel="canonical" href="https://salmmike.github.io/posts/post3/">
+<link rel="alternate" type="application/rss+xml" href="" title="Mike&#39;s blog about random software stuff">
+
+<header>
+  
+    <a href="https://salmmike.github.io/" class="title">Mike&#39;s blog about random software stuff</a>
+  
+  
+</header>
+
+<article>
+  <header>
+    <h1>Learning the ropes: Rust and Emulators</h1>
+    <time datetime="2023-02-15T23:00:36&#43;03:00">February 15, 2023</time>
+  </header>
+  <p>As a software developer, it&rsquo;s always fun to learn some new things.
+For this reason, I decided to start learing the Rust programming language, which seems to be the new cool kid in town.
+For quite a long time, I disrecarded Rust as yet another &ldquo;C killer&rdquo;, a type of language that claims to be the next big thing, but doesn&rsquo;t really ever get used in anything real.
+Now that Rust is even getting into the <a href="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=8aebac82933ff1a7c8eede18cab11e1115e2062b">Linux kernel</a>
+, I guess it&rsquo;s something I should look into. Not that I believe that Rust is a C killer either. At least I hope so, C is fun!</p>
+<p>At the same time, I also was interested in learning a bit about emulators, having an ultimate goal to maybe emulate an NES, or maybe even a PS1 at some point,
+so as a programming exercise, I decided to create a Chip8 &rsquo;emulator&rsquo; in <a href="https://github.com/salmmike/mpschip8">C++</a> and <a href="https://github.com/salmmike/rustchip8">Rust</a>.
+If you don&rsquo;t know what Chip8 is, it&rsquo;s a simple interpreted programming language from the 70&rsquo;s, designed to simplify the creation of simple games for the computers of that era.
+The language allows programmers to create stunning games with up to two colors (if you count black and white as colors) and a vast resolution of 64x32 pixels.
+Because chip8 is so easy to implement, it remains as a popular &rsquo;emulator&rsquo; that hobbyist-programmers keep making their own versions of, and even new games are created using it.</p>
+<h2 id="starting-with-something-i-know">Starting with something I know</h2>
+<p>Because I hadn&rsquo;t programmed Rust beyond a few toy programs and didn&rsquo;t know how a Chip8 would exactly work, I decided to start by creating the Chip8 implementation in C++.
+I thought that it might be just too much of a hassel learning a new thing in a completely new language.</p>
+<p>So, I did a few google searches and landed on a <a href="https://tobiasvl.github.io/blog/write-a-chip-8-emulator/">great blog post on the Chip8 implementation by Tobias V. Langhoff</a>.
+The Chip8 is somewhat of a hello world to the emulator world, so implementing it in C++ didn&rsquo;t take too long, and went pretty much as expected.
+I think I spent a couple nights after my working hours hacking away, and after refreshing my memory on the <a href="https://www.sfml-dev.org/">SFML</a> graphics library, I was done.
+It was a pretty fun project, as the progress was quite quick, and it only required <a href="https://tobiasvl.github.io/blog/write-a-chip-8-emulator/#instructions">a few instructions</a>
+to get the first program rendered on the screen.</p>
+<p><img src="https://raw.githubusercontent.com/salmmike/mpschip8/master/mpschip8_ibm.png" alt="IBM logo on the C++ version of the emulator."></p>
+<p>From there on, it was mostly just implementing all the different instructions and using some dedicated programs to check that they are working properly.</p>
+<p>I used a fairly simple architechture for my program, a class to represent the CPU and another one for the screen and keyboard.
+I didn&rsquo;t include much debugging methods or step by step execution in my emulator, as the goal was just to get it working quickly,
+and I think I managed that well enough for my purposes. Nothing fancy, just a quick&rsquo;n&rsquo;dirty build.</p>
+<h2 id="rewriting-everything-in-rust">Rewriting everything in Rust</h2>
+<p><strong>Note: I have programmed maybe less than ~1000 lines of code in Rust as I&rsquo;m writing this, please don&rsquo;t take anything I write about Rust as a fact.</strong></p>
+<p>The main thing Rust seems to be used for currently is rewrting existing C and C++ programs.
+That&rsquo;s what I was about to do too now, so it was the time to learn enough Rust to rewrite what I just did in C++.</p>
+<p>First, I started by learning how to create a &ldquo;class&rdquo; in Rust, as I wanted to follow the same OOP model I used in my C++ program.
+Rust doesn&rsquo;t seem to have a difference between classes and structs, so a &ldquo;class&rdquo; is just a struct with function implementations along it.</p>
+<p>My lack of knownledge about Rust made even creating the first struct reprecenting the &ldquo;CPU&rdquo; a bit difficult, as I would have liked
+it to have fixed sized arrays for things like the memory and the different registers. I never found out if that was possible to do in Rust,
+so I opted to use a vector for those elements. I guess I would have needed to use something called a slice in my struct and keep the actual
+ownership of the array somewhere else, but I didn&rsquo;t like the idea all that much.</p>
+<p>My CPU struct ended up looking something like this:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Rust" data-lang="Rust"><span style="display:flex;"><span><span style="color:#66d9ef">pub</span> <span style="color:#66d9ef">struct</span> <span style="color:#a6e22e">CPU</span> {
+</span></span><span style="display:flex;"><span>    pc: <span style="color:#66d9ef">usize</span>,
+</span></span><span style="display:flex;"><span>    i: <span style="color:#66d9ef">u16</span>,
+</span></span><span style="display:flex;"><span>    v: Vec<span style="color:#f92672">&lt;</span><span style="color:#66d9ef">u8</span><span style="color:#f92672">&gt;</span>,
+</span></span><span style="display:flex;"><span>    memory: Vec<span style="color:#f92672">&lt;</span><span style="color:#66d9ef">u8</span><span style="color:#f92672">&gt;</span>,
+</span></span><span style="display:flex;"><span>    stack: Vec<span style="color:#f92672">&lt;</span><span style="color:#66d9ef">u16</span><span style="color:#f92672">&gt;</span>,
+</span></span><span style="display:flex;"><span>    delay_timer: <span style="color:#66d9ef">u8</span>,
+</span></span><span style="display:flex;"><span>    sound_timer: <span style="color:#66d9ef">u8</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">pub</span> peripherals: <span style="color:#a6e22e">Peripherals</span>,
+</span></span><span style="display:flex;"><span>    rnd: <span style="color:#a6e22e">ThreadRng</span>,
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>I represented my peripherals, otherwise known as the screen and keyboard as another struct, <code>Peripherals</code>.
+That was the means of my CPU checking the input states and drawing on the screen.</p>
+<p>For the Peripherals implementation, I decided to use a Rust library called <a href="https://www.piston.rs/">piston</a>.
+It was quite different from the SFML library I used for the C++ implementation, but ended up working nicely.</p>
+<p>Learning new stuff always takes it&rsquo;s time, so at first it was quite the battle trying to remember to cast all your
+data from type A to type B in cases that seem somewhat trivial from the programming perspective in the C case.
+I&rsquo;ll have to admit, it felt quite annoying at first, doing something like returning the first byte of a 16-bit integer
+required more code stating that &ldquo;yes, I really want to do this&rdquo; than the actual operation:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Rust" data-lang="Rust"><span style="display:flex;"><span><span style="color:#75715e">/* in C(++) */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">return</span> value <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xFF</span>;
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* in Rust */</span>
+</span></span><span style="display:flex;"><span>((value <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xFF</span>)).try_into().unwrap()
+</span></span></code></pre></div><p>In a way it&rsquo;s nice that Rust really forces you to be aware of all the possible memory issues and
+type-safety that doesn&rsquo;t require attention in C, causing hard to find bugs every once in a while,
+but on the other hand&hellip; That&rsquo;s one ugly line of code for a simple thing.</p>
+<p>Another issue related to that, is that overflowing an integer would cause panic in Rust.
+Again, it&rsquo;s nice that the language is really making sure you don&rsquo;t run into things that
+normally shouldn&rsquo;t happen, but annoying when the Chip8 implementation is expecting values to
+overflow. I read that there are compiler flags in the rust compiler that allow overflows,
+but I opted to just create overflowing add and subtraction functions:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Rust" data-lang="Rust"><span style="display:flex;"><span>    <span style="color:#75715e">/*
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">    Note:
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">    I&#39;m pretty sure that val &amp; 0xFF == val % (u8::MAX + 1)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">    I just don&#39;t remember why I did it in two different ways :D
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">    */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fn</span> <span style="color:#a6e22e">overflow_add</span>(<span style="color:#f92672">&amp;</span>self, a: <span style="color:#66d9ef">u8</span>, b: <span style="color:#66d9ef">u8</span>) -&gt; <span style="color:#66d9ef">u8</span> {
+</span></span><span style="display:flex;"><span>        (((a <span style="color:#66d9ef">as</span> <span style="color:#66d9ef">u16</span> <span style="color:#f92672">+</span> b <span style="color:#66d9ef">as</span> <span style="color:#66d9ef">u16</span>)) <span style="color:#f92672">%</span> (<span style="color:#66d9ef">u8</span>::MAX <span style="color:#66d9ef">as</span> <span style="color:#66d9ef">u16</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>)) <span style="color:#66d9ef">as</span> <span style="color:#66d9ef">u8</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fn</span> <span style="color:#a6e22e">overflow_subtract</span>(<span style="color:#f92672">&amp;</span>self, a: <span style="color:#66d9ef">u8</span>, b: <span style="color:#66d9ef">u8</span>) -&gt; <span style="color:#66d9ef">u8</span> {
+</span></span><span style="display:flex;"><span>        (((a <span style="color:#66d9ef">as</span> <span style="color:#66d9ef">i16</span> <span style="color:#f92672">-</span> b <span style="color:#66d9ef">as</span> <span style="color:#66d9ef">i16</span>)) <span style="color:#f92672">&amp;</span> (<span style="color:#ae81ff">0xFF</span>)) <span style="color:#66d9ef">as</span> <span style="color:#66d9ef">u8</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span></code></pre></div><p>Again. Ugly, but works (I hope, I probably didn&rsquo;t check that). Also, it most likely is at least partly my fault
+that the code is looking ugly. I bet there are many of these &lsquo;Rustaceans&rsquo; that
+would cry if they read that line of code.
+Hopefully I&rsquo;ll take a look at this after a few years and cringe at myself too.
+If I don&rsquo;t, I have either written perfect Rust code in my first program, or I haven&rsquo;t
+improved at all in that time. I&rsquo;m 100% sure I am not writing good Rust right now, and that&rsquo;s OK.
+But not improving while trying to&hellip; Not so good.</p>
+<p>Like in the C++ version, I first implemented just enough instructions to get the IBM logo program running.
+It took a couple more nights in Rust than it did in C++ because of all the learning going on, but after not
+too long, I was able to get the first program running:</p>
+<p><img src="https://raw.githubusercontent.com/salmmike/rustchip8/master/rust_chip8_ibm.png" alt="IBM logo on the Rust version of the emulator."></p>
+<p>After that, I just needed to implement all the other instructions, just like before. Quite quick at that point.</p>
+<p>Only getting the input required a bit more work with the piston framework. In SFML I was able to poll
+the keyboard state at any time, so I just did it when I hit an instruction telling me to.
+But the piston framework worked a bit differently. Its event loop returned button press and release events
+every time a button was hit. So I ended up storing the button states in a vector that was updated on
+each key event and read that when the program wanted to poll keys.
+Not much work in the end, just required reading a bit more of the piston documentation.</p>
+<h2 id="afterthoughts">Afterthoughts</h2>
+<p>When I started this project, I had a bit of a bias against Rust.
+I always (okay, maybe the first few months were a pain years ago) liked programming in C and C++,
+and was mostly annoyed by the dozens of self-proclaimed C++ killers.
+And for the first couple of days, I was pretty against how Rust is doing things.</p>
+<p>I didn&rsquo;t like having to tell the compiler multiple times that I think I know what I&rsquo;m doing, please don&rsquo;t get in the way.
+But after doing it for a while, I think I got a bit more used to it and it didn&rsquo;t bother me that much anymore.
+After that, I was even starting to appreciate what the compiler was doing. Programming in Rust started to feel quite nice.</p>
+<p>Maybe the turning point was when I slowly started to understand at least a little bit of what I was doing.
+It&rsquo;s annoying when you know exactly what you want to do, but just don&rsquo;t know how to express it.
+After getting past that, I really started to enjoy writing Rust.
+I definately will be using it for my future weekend/weeknight projects too and learning a lot more about it.</p>
+<p>Besides of just the language and it&rsquo;s syntax, I really do like the Cargo package manager.
+It&rsquo;s quite nice that I don&rsquo;t need to use something like CMake for my Rust projects, which
+usually takes quite a bit of time to configure, which is away from all the fun stuff.</p>
+<p>I&rsquo;ve also started to write some unit tests even on my own toy projects, sometimes even applying a bit of TDD
+to my style of writing code. After having enough bugs on my programs I make for fun,
+I came to the conclusion that writing tests does improve my programming experience, even
+for programs that no-one will ever use but myself. And even I won&rsquo;t use them after creating them.
+It&rsquo;s always enjoyable to see the row of OK&rsquo;s from the tests, even if having bugs here and there
+wouldn&rsquo;t really matter in the end result at all.
+That brings me back to Cargo. It made writing those tests really easy. Thumbs up for that too!</p>
+<p>Links to the source code for both programs:</p>
+<p>C++: <a href="https://github.com/salmmike/mpschip8">https://github.com/salmmike/mpschip8</a></p>
+<p>Rust: <a href="https://github.com/salmmike/rustchip8">https://github.com/salmmike/rustchip8</a></p>
+
+</article>
+
+
+
+</html>
