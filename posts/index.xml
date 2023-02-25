@@ -6,7 +6,17 @@
     <description>Recent content in Posts on Mike&#39;s blog about random software stuff</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Wed, 15 Feb 2023 23:00:36 +0300</lastBuildDate><atom:link href="https://salmmike.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sat, 25 Feb 2023 21:30:36 +0300</lastBuildDate><atom:link href="https://salmmike.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Rust and Emulators part 2: 6502 processor</title>
+      <link>https://salmmike.github.io/posts/post4/</link>
+      <pubDate>Sat, 25 Feb 2023 21:30:36 +0300</pubDate>
+      
+      <guid>https://salmmike.github.io/posts/post4/</guid>
+      <description>A couple of weeks ago, I decided to start learning some Rust, and decided to start by creating a chip8 emulator. In my previous blog post, I mentioned I was planning to emulate something like a NES in the future. And that&amp;rsquo;s what I have started doing now. My journey towards a working NES emulator starts by creating a 6502 processor emulator.
+I spent a few weekends writing the 6502 emulator, and before long, I had a first version up and running.</description>
+    </item>
+    
     <item>
       <title>Learning the ropes: Rust and Emulators</title>
       <link>https://salmmike.github.io/posts/post3/</link>
