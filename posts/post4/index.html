@@ -25,7 +25,7 @@ In my previous <a href="https://salmmike.github.io/posts/post3/">blog post</a>
 , I mentioned I was planning to emulate something like a NES in the future.
 And that&rsquo;s what I have started doing now. My journey towards a working NES emulator starts by creating a 6502 processor emulator.</p>
 <p>I spent a few weekends writing the 6502 emulator, and before long, I had a first version up and running.
-There are probably countles bugs in this initial version of the emulator and the code is a bit of a mess,
+There are probably countless bugs in this initial version of the emulator and the code is a bit of a mess,
 but I managed to run some simple programs with it anyways.
 Here&rsquo;s how I started my implementation.</p>
 <h2 id="resources">Resources</h2>
@@ -52,10 +52,10 @@ Not much to say about that, just a lot of manual copying the data to form my str
 <h2 id="executing-instructions-according-to-the-parsed-data">Executing instructions according to the parsed data</h2>
 <p>After being able to parse the instructions, I had access to the actual instruction and it&rsquo;s addressing mode.
 It was time to create a few more lookup tables again based on this information.</p>
-<p>I created a cpu class thats job is to read a value from memory using a program counter, use the previously created code to parse the <code>Instruction</code> from read memory,
+<p>I created a CPU class that&rsquo;s job is to read a value from memory using a program counter, use the previously created code to parse the <code>Instruction</code> from read memory,
 and then to execute the instruction.</p>
 <p>Luckily, the different kinds of addressing modes and instruction types could be handled separate from each other.
-The addressing mode tells our CPU where the data that we are using exists in. For example, it could state that we should operate on the acumulator, which is simply
+The addressing mode tells our CPU where the data that we are using exists in. For example, it could state that we should operate on the accumulator, which is simply
 a register in the 6502 CPU. Or, it could be a memory location pointed by the two following bytes in the memory.
 If the addressing mode stated that we&rsquo;ll operate on the ram memory, I parsed and saved the address.
 If the addressing mode stated that we should operate on a register, I did nothing.</p>
@@ -64,7 +64,7 @@ So, when handling the addressing mode, I returned a value for the rest of the pr
 <p>After parsing the memory location we&rsquo;re operating on, I was able to start implementing the actual instructions.
 Again, this called for a huge lookup table, selecting a function based on the <code>itype</code> field in out <code>Instruction</code> struct.
 Implementing the instructions wasn&rsquo;t really that different from the chip8 instructions, there were just a lot more of them.
-Again, there were instrctions that could require additional cycles to run them.
+Again, there were instructions that could require additional cycles to run them.
 I returned this information from each of the instruction implementations like I did with the addressing modes.</p>
 <p>Some of the instructions required a quite a bit of thinking. When do I need to set a bit in the status register, when do I need to clear them, things like that.
 In the current version there are most likely a bunch of instructions setting the wrong bits, or setting them incorrectly, but I guess I&rsquo;ll need to fix them later.</p>
@@ -105,7 +105,7 @@ C: 0, Z: 0, I: 0, D: 0, B: 0, V: 0, N: 0
 </code></pre><p>A huge wall of text that isn&rsquo;t really too nice to look at, but just enough to verify that at least the simple program I added was working.
 Not much, but a good starting point to get going with the rest of the system.</p>
 <p>Next, I&rsquo;ll need to study the next steps, and start creating more parts or the NES system.</p>
-<p><a href="https://github.com/salmmike/rustynes">Here&rsquo;s the the source code, incase you&rsquo;d like to have a look</a>. Happy hacking!</p>
+<p><a href="https://github.com/salmmike/rustynes">Here&rsquo;s the the source code, in case you&rsquo;d like to have a look</a>. Happy hacking!</p>
 
 </article>
 
