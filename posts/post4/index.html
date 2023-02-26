@@ -20,8 +20,9 @@
     <h1>Rust and Emulators part 2: 6502 processor</h1>
     <time datetime="2023-02-25T21:30:36&#43;03:00">February 25, 2023</time>
   </header>
-  <p>A couple of weeks ago, I decided to start learning some Rust, and decided to start by creating a chip8 emulator.
-In my previous blog post, I mentioned I was planning to emulate something like a NES in the future.
+  <p>A couple of weeks ago, I decided to start learning some Rust, and started by creating a chip8 emulator.
+In my previous <a href="https://salmmike.github.io/posts/post3/">blog post</a>
+, I mentioned I was planning to emulate something like a NES in the future.
 And that&rsquo;s what I have started doing now. My journey towards a working NES emulator starts by creating a 6502 processor emulator.</p>
 <p>I spent a few weekends writing the 6502 emulator, and before long, I had a first version up and running.
 There are probably countles bugs in this initial version of the emulator and the code is a bit of a mess,
@@ -48,7 +49,7 @@ representable by an 8-bit number. I decided to only parse the legal ones, and pa
 </span></span></code></pre></div><p>The <code>value</code> field represents the actual 8-bit number of the instruction, and the other ones are parsed by the match statement using said value.
 There wasn&rsquo;t really anything more to this than just carefully looking up all the values from the <a href="https://www.nesdev.org/obelisk-6502-guide/reference.html">instruction reference guide</a>.
 Not much to say about that, just a lot of manual copying the data to form my structs. This took a long time, I spent quite a few hours getting everything copied.</p>
-<h2 id="executing-instructions-accoring-to-the-parsed-data">Executing instructions accoring to the parsed data</h2>
+<h2 id="executing-instructions-according-to-the-parsed-data">Executing instructions according to the parsed data</h2>
 <p>After being able to parse the instructions, I had access to the actual instruction and it&rsquo;s addressing mode.
 It was time to create a few more lookup tables again based on this information.</p>
 <p>I created a cpu class thats job is to read a value from memory using a program counter, use the previously created code to parse the <code>Instruction</code> from read memory,

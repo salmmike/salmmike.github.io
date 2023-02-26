@@ -13,7 +13,7 @@
       <pubDate>Sat, 25 Feb 2023 21:30:36 +0300</pubDate>
       
       <guid>https://salmmike.github.io/posts/post4/</guid>
-      <description>A couple of weeks ago, I decided to start learning some Rust, and decided to start by creating a chip8 emulator. In my previous blog post, I mentioned I was planning to emulate something like a NES in the future. And that&amp;rsquo;s what I have started doing now. My journey towards a working NES emulator starts by creating a 6502 processor emulator.
+      <description>A couple of weeks ago, I decided to start learning some Rust, and started by creating a chip8 emulator. In my previous blog post , I mentioned I was planning to emulate something like a NES in the future. And that&amp;rsquo;s what I have started doing now. My journey towards a working NES emulator starts by creating a 6502 processor emulator.
 I spent a few weekends writing the 6502 emulator, and before long, I had a first version up and running.</description>
     </item>
     
