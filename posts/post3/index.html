@@ -2,7 +2,7 @@
 <html lang="en-us">
 <title>Learning the ropes: Rust and Emulators | Mike&#39;s blog about random software stuff</title>
 <meta charset="utf-8">
-<meta name="generator" content="Hugo 0.110.0">
+<meta name="generator" content="Hugo 0.111.3">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="https://salmmike.github.io/css/index.css">
 <link rel="canonical" href="https://salmmike.github.io/posts/post3/">
@@ -91,7 +91,7 @@ but I opted to just create overflowing add and subtraction functions:</p>
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">    I just don&#39;t remember why I did it in two different ways :D
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">    */</span>
 </span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fn</span> <span style="color:#a6e22e">overflow_add</span>(<span style="color:#f92672">&amp;</span>self, a: <span style="color:#66d9ef">u8</span>, b: <span style="color:#66d9ef">u8</span>) -&gt; <span style="color:#66d9ef">u8</span> {
-</span></span><span style="display:flex;"><span>        (((a <span style="color:#66d9ef">as</span> <span style="color:#66d9ef">u16</span> <span style="color:#f92672">+</span> b <span style="color:#66d9ef">as</span> <span style="color:#66d9ef">u16</span>)) <span style="color:#f92672">%</span> (<span style="color:#66d9ef">u8</span>::MAX <span style="color:#66d9ef">as</span> <span style="color:#66d9ef">u16</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>)) <span style="color:#66d9ef">as</span> <span style="color:#66d9ef">u8</span>
+</span></span><span style="display:flex;"><span>        (((a <span style="color:#66d9ef">as</span> <span style="color:#66d9ef">u16</span> <span style="color:#f92672">+</span> b <span style="color:#66d9ef">as</span> <span style="color:#66d9ef">u16</span>)) <span style="color:#f92672">%</span> (<span style="color:#66d9ef">u8</span>::<span style="color:#66d9ef">MAX</span> <span style="color:#66d9ef">as</span> <span style="color:#66d9ef">u16</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>)) <span style="color:#66d9ef">as</span> <span style="color:#66d9ef">u8</span>
 </span></span><span style="display:flex;"><span>    }
 </span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fn</span> <span style="color:#a6e22e">overflow_subtract</span>(<span style="color:#f92672">&amp;</span>self, a: <span style="color:#66d9ef">u8</span>, b: <span style="color:#66d9ef">u8</span>) -&gt; <span style="color:#66d9ef">u8</span> {
 </span></span><span style="display:flex;"><span>        (((a <span style="color:#66d9ef">as</span> <span style="color:#66d9ef">i16</span> <span style="color:#f92672">-</span> b <span style="color:#66d9ef">as</span> <span style="color:#66d9ef">i16</span>)) <span style="color:#f92672">&amp;</span> (<span style="color:#ae81ff">0xFF</span>)) <span style="color:#66d9ef">as</span> <span style="color:#66d9ef">u8</span>

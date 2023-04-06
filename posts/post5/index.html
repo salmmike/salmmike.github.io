@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<title>Learning the STM32 Peripheral library. | Mike&#39;s blog about random software stuff</title>
+<meta charset="utf-8">
+<meta name="generator" content="Hugo 0.111.3">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://salmmike.github.io/css/index.css">
+<link rel="canonical" href="https://salmmike.github.io/posts/post5/">
+<link rel="alternate" type="application/rss+xml" href="" title="Mike&#39;s blog about random software stuff">
+
+<header>
+  
+    <a href="https://salmmike.github.io/" class="title">Mike&#39;s blog about random software stuff</a>
+  
+  
+</header>
+
+<article>
+  <header>
+    <h1>Learning the STM32 Peripheral library.</h1>
+    <time datetime="2023-04-06T15:30:36&#43;03:00">April 06, 2023</time>
+  </header>
+  <p>I&rsquo;m not much of a programmer when it comes to bare-metal micro-controllers, but it&rsquo;s one area or programming I&rsquo;ve been really interested in for a long time.
+I have hoarded quite many different types of development boards to play on, and decided to play around with an STM32 bluepill for a change.
+I also had a DTH11 temperature and humidity sensor and an LCD monitor with an I2C connection lying around, so I decided to create a simple program that reads and displays the temperature and humidity in my room.</p>
+<p>Previously, I have always used the <a href="https://libopencm3.org/">libopencm3</a> library when working with STM32 boards.
+This time I decided to mix things up a bit, and use an official library provided by ST.
+Probably it&rsquo;s better to use the libraries provided by the vendor, as those are the ones that most likely would be used in a professional environment.
+Besides having fun when working on my side projects, one goal of mine is to learn to write professional level software.
+That goal is much better addressed by using the professional libraries.</p>
+<h2 id="setting-up-the-development-environment">Setting up the development environment</h2>
+<p>Unfortunately, the default way ST wants you to work is by using their horrible CubeIDE. That&rsquo;s something I refuse to use when I&rsquo;m not getting payed, so my first task was to create a <code>Makefile</code> based build environment around the ST libraries.
+I opted to use the <a href="https://www.st.com/en/embedded-software/stsw-stm32054.html#overview">STM32 Standard Peripheral library</a> for this project.
+I was able to find some Makefiles online using this library, and I modified them to suit my own needs. Unfortunately I lost the source where I stole those from.
+My version of the Makefile can be found <a href="https://github.com/salmmike/stm32sensorread/blob/master/Makefile">here</a>.</p>
+<h2 id="starting-the-programming">Starting the programming</h2>
+<p>I started the work like I almost always do when doing embedded projects; blinking an LED.
+Nothing fancy, just needed to initialize a GPIO pin as output and then change it&rsquo;s value.</p>
+<p>I created a function for the initialization, and used the library function to change the values:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">init_GPIO_output</span>(GPIO_TypeDef<span style="color:#f92672">*</span> PORT, <span style="color:#66d9ef">uint32_t</span> PIN)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// GPIO structure for port initialization
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    GPIO_InitTypeDef GPIO_InitStructure;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// enable clock on APB2
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (PORT <span style="color:#f92672">==</span> GPIOA) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">RCC_APB2PeriphClockCmd</span>(RCC_APB2Periph_GPIOA,  ENABLE);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (PORT <span style="color:#f92672">==</span> GPIOB) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">RCC_APB2PeriphClockCmd</span>(RCC_APB2Periph_GPIOB,  ENABLE);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (PORT <span style="color:#f92672">==</span> GPIOC) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">RCC_APB2PeriphClockCmd</span>(RCC_APB2Periph_GPIOC,  ENABLE);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    GPIO_InitStructure.GPIO_Pin <span style="color:#f92672">=</span> PIN;
+</span></span><span style="display:flex;"><span>    GPIO_InitStructure.GPIO_Mode <span style="color:#f92672">=</span> GPIO_Mode_Out_PP;    <span style="color:#75715e">// output push-pull mode
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    GPIO_InitStructure.GPIO_Speed <span style="color:#f92672">=</span> GPIO_Speed_50MHz;   <span style="color:#75715e">// highest speed
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">GPIO_Init</span>(PORT, <span style="color:#f92672">&amp;</span>GPIO_InitStructure);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">GPIO_SetBits</span>(GPIOC, LED_Pin);
+</span></span><span style="display:flex;"><span>....
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">GPIO_ResetBits</span>(GPIOC, LED_Pin);
+</span></span></code></pre></div><p>Nice and easy.</p>
+<p>The next step was to print something with the UART. This would be useful for debugging the DTH11.</p>
+<p>Again, I needed two main functions, an init and a print function.
+They were defined as follows:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">init_USART3_output</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">RCC_APB2PeriphClockCmd</span>(RCC_APB2Periph_GPIOB, ENABLE);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">RCC_APB1PeriphClockCmd</span>(RCC_APB1Periph_USART3, ENABLE);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    GPIO_InitTypeDef GPIO_InitStructure;
+</span></span><span style="display:flex;"><span>    GPIO_InitStructure.GPIO_Pin <span style="color:#f92672">=</span> GPIO_Pin_10;
+</span></span><span style="display:flex;"><span>    GPIO_InitStructure.GPIO_Speed <span style="color:#f92672">=</span> GPIO_Speed_50MHz;
+</span></span><span style="display:flex;"><span>    GPIO_InitStructure.GPIO_Mode <span style="color:#f92672">=</span> GPIO_Mode_AF_PP;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">GPIO_Init</span>(GPIOB, <span style="color:#f92672">&amp;</span>GPIO_InitStructure);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    USART_InitTypeDef USART_InitStructure;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">USART_StructInit</span>(<span style="color:#f92672">&amp;</span>USART_InitStructure);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    USART_InitStructure.USART_BaudRate <span style="color:#f92672">=</span> <span style="color:#ae81ff">115200</span>;
+</span></span><span style="display:flex;"><span>    USART_InitStructure.USART_StopBits <span style="color:#f92672">=</span> USART_StopBits_1;
+</span></span><span style="display:flex;"><span>    USART_InitStructure.USART_WordLength <span style="color:#f92672">=</span> USART_WordLength_8b;
+</span></span><span style="display:flex;"><span>    USART_InitStructure.USART_Parity <span style="color:#f92672">=</span> USART_Parity_No;
+</span></span><span style="display:flex;"><span>    USART_InitStructure.USART_Mode <span style="color:#f92672">=</span> USART_Mode_Tx;
+</span></span><span style="display:flex;"><span>    USART_InitStructure.USART_HardwareFlowControl <span style="color:#f92672">=</span> USART_HardwareFlowControl_None;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">USART_Init</span>(USART3, <span style="color:#f92672">&amp;</span>USART_InitStructure);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">USART_Cmd</span>(USART3, ENABLE);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">USART3_Print</span>(<span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span><span style="color:#f92672">*</span> msg)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">4098</span>; <span style="color:#f92672">++</span>i) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">while</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">USART_GetFlagStatus</span>(USART3, USART_FLAG_TXE));
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">USART_SendData</span>(USART3, msg[i]);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (msg[i] <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">break</span>;
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">USART_GetFlagStatus</span>(USART3, USART_FLAG_TXE));
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">USART_SendData</span>(USART3, <span style="color:#e6db74">&#39;\r&#39;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">USART_GetFlagStatus</span>(USART3, USART_FLAG_TXE));
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">USART_SendData</span>(USART3, <span style="color:#e6db74">&#39;\n&#39;</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>I opted to use the USART3 for my UART output. Not for any particular reason really, just decided to choose that.</p>
+<p>I created some sleep functions for creating delays of milliseconds and microseconds to my program, and after that, I was ready to start working on the DHT11 sensor.</p>
+<h2 id="reading-the-temperature-and-humidity">Reading the temperature and humidity</h2>
+<p>The <a href="https://www.mouser.com/datasheet/2/758/DHT11-Technical-Data-Sheet-Translated-Version-1143054.pdf">DHT11</a> sensor has its own protocol for communications.
+The nice thing about it is that it uses only a single wire for the communication, but as it doesn&rsquo;t follow any standard protocol (that I know of) the communication needed to be implemented from scratch.</p>
+<p>The communication begins by the MCU pulling down the data pin for at least 18ms for starters, and then pulling it up for about 20us.
+The sensor responds by keeping the data-line down for 80us, then pulling it up for 80us, and then begins transmitting the data.</p>
+<p>In my code, the startup sequence looks something like this:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">DHT11_Read</span>(<span style="color:#66d9ef">int</span><span style="color:#f92672">*</span> temperature, <span style="color:#66d9ef">int</span><span style="color:#f92672">*</span> humidity)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">uint8_t</span> data[<span style="color:#ae81ff">5</span>] <span style="color:#f92672">=</span> {<span style="color:#ae81ff">0</span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">init_GPIO_output</span>(DHT11_PORT, DHT11_PIN);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">GPIO_ResetBits</span>(DHT11_PORT, DHT11_PIN);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mpsdelay</span>(<span style="color:#ae81ff">20</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">GPIO_SetBits</span>(DHT11_PORT, DHT11_PIN);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mpsudelay</span>(<span style="color:#ae81ff">24</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">init_GPIO_input</span>(DHT11_PORT, DHT11_PIN);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">GPIO_ReadInputDataBit</span>(DHT11_PORT, DHT11_PIN)) {}
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> (<span style="color:#a6e22e">GPIO_ReadInputDataBit</span>(DHT11_PORT, DHT11_PIN)) {}
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Start reading data
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    ...
+</span></span></code></pre></div><p>The sensor sends its data-bits by first pulling the signal low for 50us, then pulls the line up for 26-28us or 70us.
+If the line is up for under 28us, the data-bit sent is zero. And likewise, if the line is up for about 70us, the data-bit is a one.</p>
+<p>So basically, reading the bit looks something like this:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">static</span> <span style="color:#66d9ef">uint8_t</span> <span style="color:#a6e22e">DHT11_ReadBit</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">int</span> deltaT <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> (<span style="color:#a6e22e">GPIO_ReadInputDataBit</span>(DHT11_PORT, DHT11_PIN)) {
+</span></span><span style="display:flex;"><span>        deltaT<span style="color:#f92672">++</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">GPIO_ReadInputDataBit</span>(DHT11_PORT, DHT11_PIN)) {}
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> deltaT <span style="color:#f92672">&gt;</span> ZERO_BIT_MAX_T;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>And to get a whole byte:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">static</span> <span style="color:#66d9ef">uint8_t</span> <span style="color:#a6e22e">DHT11_ReadByte</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">uint8_t</span> output <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">8</span>; <span style="color:#f92672">++</span>i) {
+</span></span><span style="display:flex;"><span>        output <span style="color:#f92672">|=</span> <span style="color:#a6e22e">DHT11_ReadBit</span>() <span style="color:#f92672">&lt;&lt;</span> (<span style="color:#ae81ff">7</span><span style="color:#f92672">-</span>i);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">while</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">GPIO_ReadInputDataBit</span>(DHT11_PORT, DHT11_PIN)) {}
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> output;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>With those functions, I was able to finish my DHT11_Read function like this:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>    ...
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">5</span>; <span style="color:#f92672">++</span>i) {
+</span></span><span style="display:flex;"><span>        data[i] <span style="color:#f92672">=</span> <span style="color:#a6e22e">DHT11_ReadByte</span>();
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> sum <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">5</span>; <span style="color:#f92672">++</span>i) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (i <span style="color:#f92672">!=</span> <span style="color:#ae81ff">4</span>) {
+</span></span><span style="display:flex;"><span>            sum <span style="color:#f92672">+=</span> data[i];
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">*</span>humidity <span style="color:#f92672">=</span> data[<span style="color:#ae81ff">0</span>];
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">*</span>temperature <span style="color:#f92672">=</span> data[<span style="color:#ae81ff">2</span>];
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> sum <span style="color:#f92672">==</span> data[<span style="color:#ae81ff">4</span>];
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>The last byte the sensor sends is a checksum that should equal the sum of all previous bytes.</p>
+<p>I&rsquo;m not sure how accurate the DTH11 module is, but I was able to read values that probably could be the humidity and temperature of my room, and the checksum was correct, so I assume everything&rsquo;s working like it should.</p>
+<h2 id="displaying-the-data">Displaying the data</h2>
+<p>After reading the data, it was time for me to try and display it.
+I had gotten an <a href="http://wiki.sunfounder.cc/index.php?title=LCD1602_Module">LCD1602 module</a> from some Arduino kit, with a PCF8574 I2C driver.</p>
+<p>I decided to use the I2C1 port for the communication, and created the following init function, and a function for sending a data buffer:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#define LCD_I2C_ADDRESS 0x4E
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">static</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">I2C1_Init</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">RCC_APB2PeriphClockCmd</span>(RCC_APB2Periph_GPIOB, ENABLE);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">RCC_APB1PeriphClockCmd</span>(RCC_APB1Periph_I2C1, ENABLE);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    GPIO_InitTypeDef GPIO_InitStructure;
+</span></span><span style="display:flex;"><span>    GPIO_InitStructure.GPIO_Speed <span style="color:#f92672">=</span> GPIO_Speed_50MHz;
+</span></span><span style="display:flex;"><span>    GPIO_InitStructure.GPIO_Mode <span style="color:#f92672">=</span> GPIO_Mode_AF_OD;
+</span></span><span style="display:flex;"><span>    GPIO_InitStructure.GPIO_Pin <span style="color:#f92672">=</span> GPIO_Pin_6 <span style="color:#f92672">|</span> GPIO_Pin_7;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">GPIO_Init</span>(GPIOB, <span style="color:#f92672">&amp;</span>GPIO_InitStructure);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">I2C_DeInit</span>(I2C1);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">I2C_Cmd</span>(I2C1, ENABLE);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    I2C_InitTypeDef I2C_InitStruct;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">I2C_StructInit</span>(<span style="color:#f92672">&amp;</span>I2C_InitStruct);
+</span></span><span style="display:flex;"><span>    I2C_InitStruct.I2C_ClockSpeed <span style="color:#f92672">=</span> <span style="color:#ae81ff">100000</span>;
+</span></span><span style="display:flex;"><span>    I2C_InitStruct.I2C_Mode <span style="color:#f92672">=</span> I2C_Mode_I2C;
+</span></span><span style="display:flex;"><span>    I2C_InitStruct.I2C_OwnAddress1 <span style="color:#f92672">=</span> LCD_I2C_ADDRESS;
+</span></span><span style="display:flex;"><span>    I2C_InitStruct.I2C_Ack <span style="color:#f92672">=</span> I2C_Ack_Enable;
+</span></span><span style="display:flex;"><span>    I2C_InitStruct.I2C_AcknowledgedAddress <span style="color:#f92672">=</span> I2C_AcknowledgedAddress_7bit;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">I2C_Init</span>(I2C1, <span style="color:#f92672">&amp;</span>I2C_InitStruct);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">static</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">I2C1_SendBuffer</span>(<span style="color:#66d9ef">uint8_t</span><span style="color:#f92672">*</span> data, <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">int</span> size, <span style="color:#66d9ef">uint8_t</span> address)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> (<span style="color:#a6e22e">I2C_GetFlagStatus</span>(I2C1, I2C_FLAG_BUSY));
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">I2C_GenerateSTART</span>(I2C1, ENABLE);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">while</span>(<span style="color:#f92672">!</span><span style="color:#a6e22e">I2C_CheckEvent</span>(I2C1, I2C_EVENT_MASTER_MODE_SELECT));
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">I2C_Send7bitAddress</span>(I2C1, address, I2C_Direction_Transmitter);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">while</span>(<span style="color:#f92672">!</span><span style="color:#a6e22e">I2C_CheckEvent</span>(I2C1, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED));
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> size; <span style="color:#f92672">++</span>i) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">I2C_SendData</span>(I2C1, data[i]);
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">while</span>(<span style="color:#f92672">!</span><span style="color:#a6e22e">I2C_CheckEvent</span>(I2C1, I2C_EVENT_MASTER_BYTE_TRANSMITTED));
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">I2C_GenerateSTOP</span>(I2C1, ENABLE);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">while</span>(<span style="color:#a6e22e">I2C_GetFlagStatus</span>(I2C1, I2C_FLAG_BUSY));
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>After getting the I2C data operations to work, I was able to initialize the LCD screen.
+By studying the display <a href="https://cdn-shop.adafruit.com/datasheets/TC1602A-01T.pdf">data sheet</a> and code from a <a href="https://controllerstech.com/i2c-lcd-in-stm32/">blog post</a>, I got the LCD screen working through the I2C module.</p>
+<p>The final step was to just combine reading the sensor data and printing it to the LCD display:</p>
+<p><img src="https://raw.githubusercontent.com/salmmike/stm32sensorread/master/LCD_display_temp_hum.jpg" alt="Sensor readings on an LCD"></p>
+<p>Feel free to take a look at <a href="https://github.com/salmmike/stm32sensorread">the full source code</a></p>
+
+</article>
+
+
+
+</html>
