@@ -2,52 +2,52 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Posts on Mike&#39;s blog about random software stuff</title>
-    <link>https://salmmike.github.io/posts/</link>
+    <link>http://localhost:1313/posts/</link>
     <description>Recent content in Posts on Mike&#39;s blog about random software stuff</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Sat, 10 Feb 2024 16:21:32 +0200</lastBuildDate>
-    <atom:link href="https://salmmike.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/posts/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Home IoT using Yocto</title>
-      <link>https://salmmike.github.io/posts/post6/</link>
+      <link>http://localhost:1313/posts/post6/</link>
       <pubDate>Sat, 10 Feb 2024 16:21:32 +0200</pubDate>
-      <guid>https://salmmike.github.io/posts/post6/</guid>
+      <guid>http://localhost:1313/posts/post6/</guid>
       <description>I&amp;rsquo;ve been working with Linux for all my career, but unfortunately, using Yocto has not been as big of a part of my work as I would have wished. For that reason I decided to do my next personal project using Yocto. Another thing I wished to do, is using Qt, as I haven&amp;rsquo;t worked with that either for a couple of years.&#xA;For my device, I used an ST stm32mp157-dk2 that I purchased about a year ago.</description>
     </item>
     <item>
       <title>Learning the STM32 Peripheral library.</title>
-      <link>https://salmmike.github.io/posts/post5/</link>
+      <link>http://localhost:1313/posts/post5/</link>
       <pubDate>Thu, 06 Apr 2023 15:30:36 +0300</pubDate>
-      <guid>https://salmmike.github.io/posts/post5/</guid>
+      <guid>http://localhost:1313/posts/post5/</guid>
       <description>I&amp;rsquo;m not much of a programmer when it comes to bare-metal micro-controllers, but it&amp;rsquo;s one area or programming I&amp;rsquo;ve been really interested in for a long time. I have hoarded quite many different types of development boards to play on, and decided to play around with an STM32 bluepill for a change. I also had a DTH11 temperature and humidity sensor and an LCD monitor with an I2C connection lying around, so I decided to create a simple program that reads and displays the temperature and humidity in my room.</description>
     </item>
     <item>
       <title>Rust and Emulators part 2: 6502 processor</title>
-      <link>https://salmmike.github.io/posts/post4/</link>
+      <link>http://localhost:1313/posts/post4/</link>
       <pubDate>Sat, 25 Feb 2023 21:30:36 +0300</pubDate>
-      <guid>https://salmmike.github.io/posts/post4/</guid>
+      <guid>http://localhost:1313/posts/post4/</guid>
       <description>A couple of weeks ago, I decided to start learning some Rust, and started by creating a chip8 emulator. In my previous blog post , I mentioned I was planning to emulate something like a NES in the future. And that&amp;rsquo;s what I have started doing now. My journey towards a working NES emulator starts by creating a 6502 processor emulator.&#xA;I spent a few weekends writing the 6502 emulator, and before long, I had a first version up and running.</description>
     </item>
     <item>
       <title>Learning the ropes: Rust and Emulators</title>
-      <link>https://salmmike.github.io/posts/post3/</link>
+      <link>http://localhost:1313/posts/post3/</link>
       <pubDate>Wed, 15 Feb 2023 23:00:36 +0300</pubDate>
-      <guid>https://salmmike.github.io/posts/post3/</guid>
+      <guid>http://localhost:1313/posts/post3/</guid>
       <description>As a software developer, it&amp;rsquo;s always fun to learn some new things. For this reason, I decided to start learing the Rust programming language, which seems to be the new cool kid in town. For quite a long time, I disrecarded Rust as yet another &amp;ldquo;C killer&amp;rdquo;, a type of language that claims to be the next big thing, but doesn&amp;rsquo;t really ever get used in anything real. Now that Rust is even getting into the Linux kernel , I guess it&amp;rsquo;s something I should look into.</description>
     </item>
     <item>
       <title>Advantech USB-4761 relays, C&#43;&#43; and Python</title>
-      <link>https://salmmike.github.io/posts/post2/</link>
+      <link>http://localhost:1313/posts/post2/</link>
       <pubDate>Fri, 10 Jun 2022 23:30:36 +0300</pubDate>
-      <guid>https://salmmike.github.io/posts/post2/</guid>
+      <guid>http://localhost:1313/posts/post2/</guid>
       <description>Recently I was trying to control the relays of an Advantech USB-4761 DAQ-module from a Linux box in a Python project. I decided to write a little post about it because I couldn’t find any good documentation or a StackOverflow answer that would suit my needs. Maybe someone will face a similar problem someday and end up here.&#xA;The DAQNavi library I downloaded the Linux DAQNavi driver install script from Advantech&amp;rsquo;s website and ran it.</description>
     </item>
     <item>
       <title>STM32 microblink</title>
-      <link>https://salmmike.github.io/posts/post_1/</link>
+      <link>http://localhost:1313/posts/post_1/</link>
       <pubDate>Sat, 28 May 2022 18:52:14 +0300</pubDate>
-      <guid>https://salmmike.github.io/posts/post_1/</guid>
+      <guid>http://localhost:1313/posts/post_1/</guid>
       <description>Disclaimer: The following text is written by someone who knows next to nothing about microcontrollers. The writer was also drinking beer. Please don’t use it as a source for anything other than entertainment purposes.&#xA;If you&amp;rsquo;ve ever fiddled around with microcontroller development boards, you&amp;rsquo;ve probably noticed that blinking an LED is pretty much the hello world of the microcontroller world. By no means am I an expert in bare-metal programming, but to me, it seems that the usual procedure for creating an MCU hello world is the following:</description>
     </item>
   </channel>
