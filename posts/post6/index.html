@@ -2,7 +2,7 @@
 <html lang="en-us">
 <title>Home IoT using Yocto | Mike&#39;s blog about random software stuff</title>
 <meta charset="utf-8">
-<meta name="generator" content="Hugo 0.122.0">
+<meta name="generator" content="Hugo 0.123.0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="https://salmmike.github.io/css/index.css">
 <link rel="canonical" href="https://salmmike.github.io/posts/post6/">
@@ -30,8 +30,8 @@ So, I decided to build a device that I can use for setting up periodic tasks, an
 <p>Another thing I added, was a <a href="https://github.com/salmmike/tasktracker-webui">web UI</a> for adding those tasks from my local network. The ST device didn&rsquo;t have a very good display for inputting text very well, so I opted not to add a way for creating tasks on that device itself.</p>
 <p>I am not an expert in creating HTML and CSS scripts, so I found ChatGPT to be very useful for this. It was able to create a good enough CSS for the simple UI page.</p>
 <p><img src="https://raw.githubusercontent.com/salmmike/tasktracker-webui/master/tasktracker-webui.png" alt="alt UI view"></p>
-<p>The UI backend was coded with Python Flask and would forward the web interactions to the Qt6 web server.</p>
-<p>Another thing I played around with, was the Github Actions for unit testing. It worked nicely, until I added some Qt features that I wasn&rsquo;t quickly able to get running.
+<p>The UI back-end was coded with Python Flask and would forward the web interactions to the Qt6 web server.</p>
+<p>Another thing I played around with, was the GitHub Actions for unit testing. It worked nicely, until I added some Qt features that I wasn&rsquo;t quickly able to get running.
 So, it worked pretty nicely until it didn&rsquo;t. Oh well, there probably would have been a pretty simple way to get it back up working, but for a hobby project, I just left it failing.</p>
 <h1 id="creating-the-yocto-layer">Creating the Yocto layer</h1>
 <p>After I got the program roughly working on my desktop, it was time to start building the <a href="https://github.com/salmmike/meta-tasktracker">Yocto layers</a>.
@@ -40,20 +40,20 @@ I started by adding the ST board support package, and poky layers, and fairly qu
 It took a couple of hours of Google, but eventually I found what was needed to get the program building.
 Then I added some systemd services, and after a lot of Google again, I got the thing started automatically after boot.
 This was a lot more difficult for me as I thought it would be. At first, I just wrote a service that launches the application.
-But that didn&rsquo;t work. The service, running as root, wasn&rsquo;t able to launch the program in weston. So, I configured it to use the <code>weston</code> user, and got the program displayed. I was so happy until I noticed that now the program doesn&rsquo;t accept touch inputs. Man, I must have spent 3 or 4 weekends trying to learn about libinput, Qt6 input methods, wayland, all sorts of things that could be related.
-Nothing worked. After many bottles of soda and frustrated friday nights, I finally discovered that I was missing an image feature from my layer, I believe it was the <code>qtwayland</code> package. I added that, reverted back to the first version I had made, and there it is. The program starts and works like a charm. Great, that&rsquo;s a lot of time wasted by not typing in 9 letters :D</p>
-<p>Creating a layer for the webUI application was fairly simple too, the python packaging works really well on Yocto. Nothing much to say about that, just add <code>inherit setuptools3</code> and you&rsquo;re basically done.</p>
+But that didn&rsquo;t work. The service, running as root, wasn&rsquo;t able to launch the program in Weston. So, I configured it to use the <code>weston</code> user, and got the program displayed. I was so happy until I noticed that now the program doesn&rsquo;t accept touch inputs. Man, I must have spent 3 or 4 weekends trying to learn about libinput, Qt6 input methods, wayland, all sorts of things that could be related.
+Nothing worked. After many bottles of soda and frustrated Friday nights, I finally discovered that I was missing an image feature from my layer, I believe it was the <code>qtwayland</code> package. I added that, reverted back to the first version I had made, and there it is. The program starts and works like a charm. Great, that&rsquo;s a lot of time wasted by not typing in 9 letters :D</p>
+<p>Creating a layer for the web UI application was fairly simple too, the python packaging works really well on Yocto. Nothing much to say about that, just add <code>inherit setuptools3</code> and you&rsquo;re basically done.</p>
 <h2 id="connecting-to-wi-fi">Connecting to Wi-Fi</h2>
 <p>After I got both of my programs running, I was quite happy for about 15 minutes. Then I realized that I had no way to configure the Wi-Fi connection without being at least somewhat of a Linux user.
 I had to access the device through a serial port or ssh to configure my Wi-Fi password every time I flashed by distro again.
 So, the next thing I wanted to build was some kind of a UI for selecting the SSID and setting the password.</p>
-<p>I had previously done something like this using bluetooth and a custom made Android application, but this time I didn&rsquo;t want to do it like that. So, I crafted the following plan:</p>
+<p>I had previously done something like this using Bluetooth and a custom made Android application, but this time I didn&rsquo;t want to do it like that. So, I crafted the following plan:</p>
 <ul>
-<li>On boot, create a Wi-Fi hotspot from the ST device.</li>
+<li>On boot, create a Wi-Fi hot-spot from the ST device.</li>
 <li>Host a web UI there that lists the available networks and allows the user to select one.</li>
 <li>Connect to the network, close the AP and disable the Wi-Fi configuration service.</li>
 </ul>
-<p>For this to work without being outrageously unsecure, I decided that I&rsquo;d need to use https instead of plain old http I used for the other web UI. So, I wrote a few scripts, couple of systemd services and another Flask based web page, and got the initial version working. And again, used ChatGPT for the CSS.
+<p>For this to work without being outrageously insecure, I decided that I&rsquo;d need to use https instead of plain old http I used for the other web UI. So, I wrote a few scripts, couple of systemd services and another Flask based web page, and got the initial version working. And again, used ChatGPT for the CSS.
 I initially thought ChatGPT is just a waste of space, but now that I realized I can use it to build pretty neat looking simple web pages, I&rsquo;m starting to like it for that feature.
 This part I ended up calling <a href="https://github.com/salmmike/wificonfig-webui">wificonfig-webui</a>. So basically how the thing works, is that it creates a self signed certificate for the https, creates an access point, and hosts a web page there.
 When an SSID and a password are set to the UI, it creates a wpa supplicant configuration file, and connects to the network.
