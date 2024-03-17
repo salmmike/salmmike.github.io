@@ -6,8 +6,15 @@
     <description>Recent content on Mike&#39;s blog about random software stuff</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 10 Feb 2024 16:21:32 +0200</lastBuildDate>
+    <lastBuildDate>Sun, 17 Mar 2024 14:46:41 +0200</lastBuildDate>
     <atom:link href="https://salmmike.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Hacking the kernel with Yocto</title>
+      <link>https://salmmike.github.io/posts/post_7/</link>
+      <pubDate>Sun, 17 Mar 2024 14:46:41 +0200</pubDate>
+      <guid>https://salmmike.github.io/posts/post_7/</guid>
+      <description>For the past few weekends I&amp;rsquo;ve been playing with my stm32mp157f-dk2 board, trying to use the GPIO expansion connector.&#xA;I didn&amp;rsquo;t really have any use for the GPIO, but the goal was just to control it. Well, actually my main goal was to learn a bit more about modifying the device tree (DT), and adding the GPIO controller to the device tree worked well as a project for that.&#xA;First attempts I started by watching a few lectures by Bootlin and Digikey, and reading the ST wiki and Yocto manuals.</description>
+    </item>
     <item>
       <title>Home IoT using Yocto</title>
       <link>https://salmmike.github.io/posts/post6/</link>
