@@ -35,24 +35,24 @@ and adding the GPIO controller to the device tree worked well as a project for t
 <p>First I used the same approach as in the Digikey video, and created a patch to the DT. At first, I created a patch for the dtsi (device tree source include file) file I wanted to modify, and added it to a recipe just like in the Digikey tutorial.</p>
 <p>The patch I needed and the file I wanted to modify was found by reading the <a href="https://wiki.st.com/stm32mpu/wiki/How_to_control_a_GPIO_in_kernel_space">ST wiki on controlling GPIO in kernel space</a>.
 The DT file I created the patch for was named <a href="https://wiki.st.com/stm32mpu/wiki/GPIO_device_tree_configuration#DT_configuration">stm32mp151.dtsi</a>.
-I also added the <a href="https://wiki.st.com/stm32mpu/wiki/How_to_control_a_GPIO_in_kernel_space#Kernel_module_code">dummy driver</a> to a new recipe in my <a href="https://github.com/salmmike/meta-tasktracker/commit/2cd2e320a801e49e9c3db39fb91ba5950c6090d5">yocto playground layer</a>.</p>
+I also added the <a href="https://wiki.st.com/stm32mpu/wiki/How_to_control_a_GPIO_in_kernel_space#Kernel_module_code">dummy driver</a> to a new recipe in my <a href="https://github.com/salmmike/meta-tasktracker/commit/2cd2e320a801e49e9c3db39fb91ba5950c6090d5">Yocto playground layer</a>.</p>
 <p>After many failed attempts that included modifying the wrong file, adding the patched code to a wrong place in the file and not getting the patch installed due to typos, I was finally able to get the new kernel code running.</p>
 <p>The default wiki code blinked a green LED in the board.
 This was good progress, but not yet what I wanted to do.
 Next I wanted to find out how do I need to modify the example DT code to control the GPIO14 in the GPIO expansion slot.
 The GPIO14 was connected to the STM32 pin PB10.
 I&rsquo;m not yet sure if this was just by pure luck, but I attempted changing the <code>gpioa 14</code> from the example code to <code>gpiob 10</code> based on the pin name.
-I added the changes, measured the GPIO pin with a multimeter, and noticed that it worked!</p>
+I added the changes, measured the GPIO pin with a multi-meter, and noticed that it worked!</p>
 <p>I was happy to see that everything that I wanted to work was working, but I felt like I wanted to try doing this in another way too.</p>
 <h1 id="forking-the-bsp-layer-and-the-linux-kernel">Forking the BSP layer and the Linux kernel</h1>
 <p><em>Note: This is my first attempt at adding a custom kernel version to a Yocto build. If you&rsquo;re for some reason learning how to do this by following my blog, please don&rsquo;t assume that this is some best practice way of doing this</em></p>
-<p>I wanted to try working with a custom version of the kernel instead of just patching it. I forked a <a href="https://github.com/salmmike/linux-stable">github mirror of the linux kernel</a> and checked out to version 6.1.28 which was used by the meta-st-stm32mp layer.
+<p>I wanted to try working with a custom version of the kernel instead of just patching it. I forked a <a href="https://github.com/salmmike/linux-stable">GitHub mirror of the Linux kernel</a> and checked out to version 6.1.28 which was used by the meta-st-stm32mp layer.
 I added the ST patches directly to this version of the kernel, so the patches from the BSP could be removed.
 I also added my DT patch directly to the kernel source.</p>
 <p>I also forked the <a href="https://github.com/salmmike/meta-st-stm32mp">ST BSP layer</a> and modified the <code>recipes-kernel</code> <a href="https://github.com/salmmike/meta-st-stm32mp/commit/ab9a38ed58bfd6aa80eba4df08181fa148fc1729">to use my version of the kernel</a></p>
 <p>I was almost surprised how easy it was to hack my kernel version to the layer, when usually making modifications to Yocto layers seem to take me a couple of weekends of googling and reading the docs.
 I guess I&rsquo;m getting better at this, or (more likely) have done something terribly wrong and will start to see strange bugs and errors when I try to add more modifications in the future. Well, we&rsquo;ll see if that happens in the future.</p>
-<p>After deleting the <code>tmp</code> directory of my Yocto build, I was able to build the new kernel from my github source.
+<p>After deleting the <code>tmp</code> directory of my Yocto build, I was able to build the new kernel from my GitHub source.
 I flashed the image to an SD card, booted my board, and ran the command <code>modprobe dummy_driver</code>. The green LED started blinking again, and I was pretty happy!</p>
 <p>Finally, I changed the Green LED pin <a href="https://github.com/salmmike/linux-stable/commit/b9b7677bef1ea753c6d021306e7c545c7db04152">back to the GPIO14 pin</a> in my custom kernel DT file, compiled my image again, and was able to measure the voltage changing again in the GPIO pin I wanted.</p>
 <p>I guess next I&rsquo;ll just need to find some device I want to control with GPIO, and write some driver for it.</p>
